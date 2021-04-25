@@ -39,12 +39,14 @@ describe("DiffChecker", () => {
   }
   it("generates the correct diff", () => {
     const codeCoverageOld = {
+      total: mock100CoverageFile,
       file1: mock99CoverageFile,
       file2: mock100CoverageFile,
       file4: mock100CoverageFile,
       file5: mock99CoverageFile,
     };
     const codeCoverageNew = {
+      total: mock99CoverageFile,
       file1: mock100CoverageFile,
       file2: mock99CoverageFile,
       file3: mock100CoverageFile,
@@ -58,11 +60,14 @@ describe("DiffChecker", () => {
     const diffChecker = new DiffChecker(codeCoverageNew, codeCoverageOld);
     const details =  diffChecker.getCoverageDetails(false, "")
     expect(details).toStrictEqual([
+      " :red_circle: | total | 99 **(-1)** | 99 **(-1)** | 99 **(-1)** | 99 **(-1)**",
       " :green_circle: | file1 | 100 **(1)** | 100 **(1)** | 100 **(1)** | 100 **(1)**",
       " :red_circle: | file2 | 99 **(-1)** | 99 **(-1)** | 99 **(-1)** | 99 **(-1)**",
       " :sparkles: :new: | **file3** | **100** | **100** | **100** | **100**",
       " :red_circle: | file5 | 99 **(0)** | 0 **(-99)** | 99 **(0)** | 99 **(0)**",
       " :x: | ~~file4~~ | ~~100~~ | ~~100~~ | ~~100~~ | ~~100~~",
     ])
+    const summary = diffChecker.getCoverageSummary();
+    expect(summary).toStrictEqual(":red_circle: Total coverage has decreased")
   });
 });

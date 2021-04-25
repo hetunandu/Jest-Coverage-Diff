@@ -68,18 +68,26 @@ export class DiffChecker {
   }
 
   getCoverageSummary(): string {
-    const total = this.diffCoverageReport.total;
+    const total = this.diffCoverageReport.total
     const keys: ('lines' | 'statements' | 'branches' | 'functions')[] = <
-        ('lines' | 'statements' | 'branches' | 'functions')[]
-      >Object.keys(total);
-    let totalDiff = 0;
+      ('lines' | 'statements' | 'branches' | 'functions')[]
+    >Object.keys(total)
+    let totalDiff = 0
     for (const key of keys) {
       if (total[key].oldPct !== total[key].newPct) {
-        totalDiff + this.getPercentageDiff(total[key]);
+        totalDiff = totalDiff + this.getPercentageDiff(total[key])
       }
     }
-    const filesAffected = Object.keys(this.diffCoverageReport).length - 1
-    return `Total coverage ${totalDiff > 0 ? 'increased' : 'decreased'} by ${totalDiff}% ${totalDiff > 0 ? increasedCoverageIcon : decreasedCoverageIcon}`
+    let summaryIcon = ':white_circle:'
+    let summaryText = 'not changed'
+    if (totalDiff > 0) {
+      summaryIcon = increasedCoverageIcon
+      summaryText = 'increased'
+    } else if (totalDiff < 0) {
+      summaryIcon = decreasedCoverageIcon
+      summaryText = 'decreased'
+    }
+    return `${summaryIcon} Total coverage has ${summaryText}`
   }
 
   checkIfTestCoverageFallsBelowDelta(delta: number): boolean {
