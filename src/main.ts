@@ -49,12 +49,16 @@ async function run(): Promise<void> {
         'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n'
       messageToPost += coverageDetails.join('\n')
     }
-    await githubClient.issues.createComment({
-      repo: repoName,
-      owner: repoOwner,
-      body: messageToPost,
-      issue_number: prNumber
-    })
+    // await githubClient.issues.createComment({
+    //   repo: repoName,
+    //   owner: repoOwner,
+    //   body: messageToPost,
+    //   issue_number: prNumber
+    // })
+
+    const comments = await githubClient.issues.listComments();
+    console.log({ comments });
+  
 
     // check if the test coverage is falling below delta/tolerance.
     if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
