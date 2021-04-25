@@ -2046,7 +2046,8 @@ function run() {
                 .toString()
                 .trim();
             const diffChecker = new DiffChecker_1.DiffChecker(codeCoverageNew, codeCoverageOld);
-            let messageToPost = `## Test coverage results :test_tube: \n
+            const messageTitle = `## Test coverage results :test_tube:`;
+            let messageToPost = `\n
     Code coverage diff between base branch:${branchNameBase} and head branch: ${branchNameHead} \n`;
             const coverageDetails = diffChecker.getCoverageDetails(!fullCoverage, `${currentDirectory}/`);
             if (coverageDetails.length === 0) {
@@ -2064,9 +2065,20 @@ function run() {
             //   body: messageToPost,
             //   issue_number: prNumber
             // })`
-            const comments = yield githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
-            const firstCommentId = comments.data;
-            console.log(firstCommentId);
+            const pr = yield githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
+            const prBody = pr.data.body;
+            const hasCoverageResult = prBody.includes(messageTitle);
+            if (hasCoverageResult) {
+                ///
+            }
+            else {
+                githubClient.issues.updateComment({
+                    repo: repoName,
+                    owner: repoOwner,
+                    comment_id: pr.data.id,
+                    body: `${prBody}\n<details><summary>${messageTitle}</summary>\n${messageToPost}</details>`
+                });
+            }
             // check if the test coverage is falling below delta/tolerance.
             if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
                 messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`;

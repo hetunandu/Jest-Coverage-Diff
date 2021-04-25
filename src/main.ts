@@ -35,7 +35,8 @@ async function run(): Promise<void> {
       codeCoverageNew,
       codeCoverageOld
     )
-    let messageToPost = `## Test coverage results :test_tube: \n
+    const messageTitle = `## Test coverage results :test_tube:`
+    let messageToPost = `\n
     Code coverage diff between base branch:${branchNameBase} and head branch: ${branchNameHead} \n`
     const coverageDetails = diffChecker.getCoverageDetails(
       !fullCoverage,
@@ -56,9 +57,19 @@ async function run(): Promise<void> {
     //   issue_number: prNumber
     // })`
 
-    const comments = await githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
-    const firstCommentId = comments.data;
-    console.log(firstCommentId);
+    const pr = await githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
+    const prBody = pr.data.body;
+    const hasCoverageResult = prBody.includes(messageTitle);
+    if(hasCoverageResult) {
+      ///
+    } else {
+      githubClient.issues.updateComment({
+        repo: repoName,
+        owner: repoOwner,
+        comment_id: pr.data.id,
+        body: `${prBody}\n<details><summary>${messageTitle}</summary>\n${messageToPost}</details>`
+      })
+    }
   
 
     // check if the test coverage is falling below delta/tolerance.
