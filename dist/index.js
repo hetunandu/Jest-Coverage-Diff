@@ -2058,12 +2058,14 @@ function run() {
                     'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n';
                 messageToPost += coverageDetails.join('\n');
             }
-            yield githubClient.issues.createComment({
-                repo: repoName,
-                owner: repoOwner,
-                body: messageToPost,
-                issue_number: prNumber
-            });
+            // await githubClient.issues.createComment({
+            //   repo: repoName,
+            //   owner: repoOwner,
+            //   body: messageToPost,
+            //   issue_number: prNumber
+            // })`
+            const comments = yield githubClient.issues.listComments();
+            console.log(comments.data[0]);
             // check if the test coverage is falling below delta/tolerance.
             if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
                 messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`;
