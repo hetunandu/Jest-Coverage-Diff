@@ -67,6 +67,21 @@ export class DiffChecker {
     return returnStrings
   }
 
+  getCoverageSummary(): string {
+    const total = this.diffCoverageReport.total;
+    const keys: ('lines' | 'statements' | 'branches' | 'functions')[] = <
+        ('lines' | 'statements' | 'branches' | 'functions')[]
+      >Object.keys(total);
+    let totalDiff = 0;
+    for (const key of keys) {
+      if (total[key].oldPct !== total[key].newPct) {
+        totalDiff + this.getPercentageDiff(total[key]);
+      }
+    }
+    const filesAffected = Object.keys(this.diffCoverageReport).length - 1
+    return `Total coverage ${totalDiff > 0 ? 'increased' : 'decreased'} by ${totalDiff}% Files Affected: ${filesAffected}`
+  }
+
   checkIfTestCoverageFallsBelowDelta(delta: number): boolean {
     const keys = Object.keys(this.diffCoverageReport)
     for (const key of keys) {

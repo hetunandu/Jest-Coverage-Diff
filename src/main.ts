@@ -50,27 +50,25 @@ async function run(): Promise<void> {
         'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n'
       messageToPost += coverageDetails.join('\n')
     }
-    // await githubClient.issues.createComment({
-    //   repo: repoName,
-    //   owner: repoOwner,
-    //   body: messageToPost,
-    //   issue_number: prNumber
-    // })`
 
     const pr = await githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
     const prBody = pr.data.body;
     const hasCoverageResult = prBody.includes(messageTitle);
+    const coverageBody = `${messageTitle}<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
+    let updateBody = `${prBody}`;
     if(hasCoverageResult) {
-      ///
+      const coverageStarts = prBody.indexOf(messageTitle);
+      const bodyWithoutCoverage = prBody.substring(0, coverageStarts);
+      updateBody = `${bodyWithoutCoverage}\n${coverageBody}`;
     } else {
-      console.log(pr);
-      await githubClient.issues.update({
-        repo: repoName,
-        owner: repoOwner,
-        issue_number: prNumber,
-        body: `${prBody}\n<details><summary>${messageTitle}</summary>\n${messageToPost}</details>`
-      })
+      updateBody = `${prBody}\n${coverageBody}`;
     }
+    await githubClient.issues.update({
+      repo: repoName,
+      owner: repoOwner,
+      issue_number: prNumber,
+      body: updateBody
+    })
   
 
     // check if the test coverage is falling below delta/tolerance.
