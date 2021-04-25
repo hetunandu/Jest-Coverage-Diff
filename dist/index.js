@@ -2062,7 +2062,7 @@ function run() {
             const pr = yield githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
             const prBody = pr.data.body;
             const hasCoverageResult = prBody.includes(messageTitle);
-            const coverageBody = `${messageTitle}<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
+            const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
             let updateBody = `${prBody}`;
             if (hasCoverageResult) {
                 const coverageStarts = prBody.indexOf(messageTitle);
