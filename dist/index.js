@@ -6748,7 +6748,7 @@ class DiffChecker {
             }
         }
         const filesAffected = Object.keys(this.diffCoverageReport).length - 1;
-        return `Total coverage ${totalDiff > 0 ? 'increased' : 'decreased'} by ${totalDiff}% Files Affected: ${filesAffected}`;
+        return `Total coverage ${totalDiff > 0 ? 'increased' : 'decreased'} by ${totalDiff}% ${totalDiff > 0 ? increasedCoverageIcon : decreasedCoverageIcon}`;
     }
     checkIfTestCoverageFallsBelowDelta(delta) {
         const keys = Object.keys(this.diffCoverageReport);
