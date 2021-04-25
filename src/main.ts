@@ -63,7 +63,7 @@ async function run(): Promise<void> {
     if(hasCoverageResult) {
       ///
     } else {
-      githubClient.issues.updateComment({
+      await githubClient.issues.updateComment({
         repo: repoName,
         owner: repoOwner,
         comment_id: pr.data.id,

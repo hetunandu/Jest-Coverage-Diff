@@ -2072,7 +2072,7 @@ function run() {
                 ///
             }
             else {
-                githubClient.issues.updateComment({
+                yield githubClient.issues.updateComment({
                     repo: repoName,
                     owner: repoOwner,
                     comment_id: pr.data.id,
