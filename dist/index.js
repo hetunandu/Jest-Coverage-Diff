@@ -2064,8 +2064,9 @@ function run() {
             //   body: messageToPost,
             //   issue_number: prNumber
             // })`
-            const comments = yield githubClient.issues.listComments();
-            console.log(comments.data[0]);
+            const comments = yield githubClient.issues.listComments({ repo: repoName, owner: repoOwner, issue_number: prNumber });
+            const firstCommentId = comments.data;
+            console.log(firstCommentId);
             // check if the test coverage is falling below delta/tolerance.
             if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
                 messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`;
