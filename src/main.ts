@@ -56,7 +56,7 @@ async function run(): Promise<void> {
     //   issue_number: prNumber
     // })`
 
-    const comments = await githubClient.issues.listComments({ repo: repoName, owner: repoOwner, issue_number: prNumber });
+    const comments = await githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
     const firstCommentId = comments.data;
     console.log(firstCommentId);
   

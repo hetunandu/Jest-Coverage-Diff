@@ -2064,7 +2064,7 @@ function run() {
             //   body: messageToPost,
             //   issue_number: prNumber
             // })`
-            const comments = yield githubClient.issues.listComments({ repo: repoName, owner: repoOwner, issue_number: prNumber });
+            const comments = yield githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
             const firstCommentId = comments.data;
             console.log(firstCommentId);
             // check if the test coverage is falling below delta/tolerance.
