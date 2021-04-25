@@ -54,10 +54,10 @@ async function run(): Promise<void> {
     //   owner: repoOwner,
     //   body: messageToPost,
     //   issue_number: prNumber
-    // })
+    // })`
 
     const comments = await githubClient.issues.listComments();
-    console.log({ comments });
+    console.log(comments.data[0]);
   
 
     // check if the test coverage is falling below delta/tolerance.
