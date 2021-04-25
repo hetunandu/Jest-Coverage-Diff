@@ -17,39 +17,39 @@ async function run(): Promise<void> {
     const prNumber = github.context.issue.number
     const branchNameBase = github.context.payload.pull_request?.base.ref
     const branchNameHead = github.context.payload.pull_request?.head.ref
-    // execSync(commandToRun)
-    // const codeCoverageNew = <CoverageReport>(
-    //   JSON.parse(fs.readFileSync('coverage-summary.json').toString())
-    // )
-    // execSync('/usr/bin/git fetch')
-    // execSync('/usr/bin/git stash')
-    // execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
-    // execSync(commandToRun)
-    // const codeCoverageOld = <CoverageReport>(
-    //   JSON.parse(fs.readFileSync('coverage-summary.json').toString())
-    // )
-    // const currentDirectory = execSync('pwd')
-    //   .toString()
-    //   .trim()
-    // const diffChecker: DiffChecker = new DiffChecker(
-    //   codeCoverageNew,
-    //   codeCoverageOld
-    // )
+    execSync(commandToRun)
+    const codeCoverageNew = <CoverageReport>(
+      JSON.parse(fs.readFileSync('coverage-summary.json').toString())
+    )
+    execSync('/usr/bin/git fetch')
+    execSync('/usr/bin/git stash')
+    execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
+    execSync(commandToRun)
+    const codeCoverageOld = <CoverageReport>(
+      JSON.parse(fs.readFileSync('coverage-summary.json').toString())
+    )
+    const currentDirectory = execSync('pwd')
+      .toString()
+      .trim()
+    const diffChecker: DiffChecker = new DiffChecker(
+      codeCoverageNew,
+      codeCoverageOld
+    )
     const messageTitle = `## Test coverage results :test_tube:`
     let messageToPost = `\n
     // Code coverage diff between base branch:${branchNameBase} and head branch: ${branchNameHead} \n`
-    // const coverageDetails = diffChecker.getCoverageDetails(
-    //   !fullCoverage,
-    //   `${currentDirectory}/`
-    // )
-    // if (coverageDetails.length === 0) {
-    //   messageToPost =
-    //     'No changes to code coverage between the base branch and the head branch'
-    // } else {
-    //   messageToPost +=
-    //     'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n'
-    //   messageToPost += coverageDetails.join('\n')
-    // }
+    const coverageDetails = diffChecker.getCoverageDetails(
+      !fullCoverage,
+      `${currentDirectory}/`
+    )
+    if (coverageDetails.length === 0) {
+      messageToPost =
+        'No changes to code coverage between the base branch and the head branch'
+    } else {
+      messageToPost +=
+        'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n'
+      messageToPost += coverageDetails.join('\n')
+    }
     // await githubClient.issues.createComment({
     //   repo: repoName,
     //   owner: repoOwner,
@@ -64,26 +64,26 @@ async function run(): Promise<void> {
       ///
     } else {
       console.log(pr);
-      await githubClient.issues.updateComment({
+      await githubClient.issues.update({
         repo: repoName,
         owner: repoOwner,
-        comment_id: pr.data.id,
+        issue_number: prNumber,
         body: `${prBody}\n<details><summary>${messageTitle}</summary>\n${messageToPost}</details>`
       })
     }
   
 
     // check if the test coverage is falling below delta/tolerance.
-    // if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
-    //   messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`
-    //   await githubClient.issues.createComment({
-    //     repo: repoName,
-    //     owner: repoOwner,
-    //     body: messageToPost,
-    //     issue_number: prNumber
-    //   })
-    //   throw Error(messageToPost)
-    // }
+    if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
+      messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`
+      await githubClient.issues.createComment({
+        repo: repoName,
+        owner: repoOwner,
+        body: messageToPost,
+        issue_number: prNumber
+      })
+      throw Error(messageToPost)
+    }
   } catch (error) {
     core.setFailed(error)
   }

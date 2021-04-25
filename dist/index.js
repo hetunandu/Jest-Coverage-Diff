@@ -2012,9 +2012,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
+const child_process_1 = __webpack_require__(129);
+const fs_1 = __importDefault(__webpack_require__(747));
+const DiffChecker_1 = __webpack_require__(563);
 function run() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -2029,39 +2035,30 @@ function run() {
             const prNumber = github.context.issue.number;
             const branchNameBase = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base.ref;
             const branchNameHead = (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.head.ref;
-            // execSync(commandToRun)
-            // const codeCoverageNew = <CoverageReport>(
-            //   JSON.parse(fs.readFileSync('coverage-summary.json').toString())
-            // )
-            // execSync('/usr/bin/git fetch')
-            // execSync('/usr/bin/git stash')
-            // execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
-            // execSync(commandToRun)
-            // const codeCoverageOld = <CoverageReport>(
-            //   JSON.parse(fs.readFileSync('coverage-summary.json').toString())
-            // )
-            // const currentDirectory = execSync('pwd')
-            //   .toString()
-            //   .trim()
-            // const diffChecker: DiffChecker = new DiffChecker(
-            //   codeCoverageNew,
-            //   codeCoverageOld
-            // )
+            child_process_1.execSync(commandToRun);
+            const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
+            child_process_1.execSync('/usr/bin/git fetch');
+            child_process_1.execSync('/usr/bin/git stash');
+            child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
+            child_process_1.execSync(commandToRun);
+            const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
+            const currentDirectory = child_process_1.execSync('pwd')
+                .toString()
+                .trim();
+            const diffChecker = new DiffChecker_1.DiffChecker(codeCoverageNew, codeCoverageOld);
             const messageTitle = `## Test coverage results :test_tube:`;
             let messageToPost = `\n
     // Code coverage diff between base branch:${branchNameBase} and head branch: ${branchNameHead} \n`;
-            // const coverageDetails = diffChecker.getCoverageDetails(
-            //   !fullCoverage,
-            //   `${currentDirectory}/`
-            // )
-            // if (coverageDetails.length === 0) {
-            //   messageToPost =
-            //     'No changes to code coverage between the base branch and the head branch'
-            // } else {
-            //   messageToPost +=
-            //     'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n'
-            //   messageToPost += coverageDetails.join('\n')
-            // }
+            const coverageDetails = diffChecker.getCoverageDetails(!fullCoverage, `${currentDirectory}/`);
+            if (coverageDetails.length === 0) {
+                messageToPost =
+                    'No changes to code coverage between the base branch and the head branch';
+            }
+            else {
+                messageToPost +=
+                    'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n';
+                messageToPost += coverageDetails.join('\n');
+            }
             // await githubClient.issues.createComment({
             //   repo: repoName,
             //   owner: repoOwner,
@@ -2076,24 +2073,24 @@ function run() {
             }
             else {
                 console.log(pr);
-                yield githubClient.issues.updateComment({
+                yield githubClient.issues.update({
                     repo: repoName,
                     owner: repoOwner,
-                    comment_id: pr.data.id,
+                    issue_number: prNumber,
                     body: `${prBody}\n<details><summary>${messageTitle}</summary>\n${messageToPost}</details>`
                 });
             }
             // check if the test coverage is falling below delta/tolerance.
-            // if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
-            //   messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`
-            //   await githubClient.issues.createComment({
-            //     repo: repoName,
-            //     owner: repoOwner,
-            //     body: messageToPost,
-            //     issue_number: prNumber
-            //   })
-            //   throw Error(messageToPost)
-            // }
+            if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
+                messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`;
+                yield githubClient.issues.createComment({
+                    repo: repoName,
+                    owner: repoOwner,
+                    body: messageToPost,
+                    issue_number: prNumber
+                });
+                throw Error(messageToPost);
+            }
         }
         catch (error) {
             core.setFailed(error);
@@ -6685,6 +6682,124 @@ function isPlainObject(o) {
 }
 
 module.exports = isPlainObject;
+
+
+/***/ }),
+
+/***/ 563:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DiffChecker = void 0;
+const increasedCoverageIcon = ':green_circle:';
+const decreasedCoverageIcon = ':red_circle:';
+const newCoverageIcon = ':sparkles: :new:';
+const removedCoverageIcon = ':x:';
+class DiffChecker {
+    constructor(coverageReportNew, coverageReportOld) {
+        var _a, _b, _c, _d, _e, _f, _g, _h;
+        this.diffCoverageReport = {};
+        const reportNewKeys = Object.keys(coverageReportNew);
+        const reportOldKeys = Object.keys(coverageReportOld);
+        const reportKeys = new Set([...reportNewKeys, ...reportOldKeys]);
+        for (const filePath of reportKeys) {
+            this.diffCoverageReport[filePath] = {
+                branches: {
+                    newPct: this.getPercentage((_a = coverageReportNew[filePath]) === null || _a === void 0 ? void 0 : _a.branches),
+                    oldPct: this.getPercentage((_b = coverageReportOld[filePath]) === null || _b === void 0 ? void 0 : _b.branches)
+                },
+                statements: {
+                    newPct: this.getPercentage((_c = coverageReportNew[filePath]) === null || _c === void 0 ? void 0 : _c.statements),
+                    oldPct: this.getPercentage((_d = coverageReportOld[filePath]) === null || _d === void 0 ? void 0 : _d.statements)
+                },
+                lines: {
+                    newPct: this.getPercentage((_e = coverageReportNew[filePath]) === null || _e === void 0 ? void 0 : _e.lines),
+                    oldPct: this.getPercentage((_f = coverageReportOld[filePath]) === null || _f === void 0 ? void 0 : _f.lines)
+                },
+                functions: {
+                    newPct: this.getPercentage((_g = coverageReportNew[filePath]) === null || _g === void 0 ? void 0 : _g.functions),
+                    oldPct: this.getPercentage((_h = coverageReportOld[filePath]) === null || _h === void 0 ? void 0 : _h.functions)
+                }
+            };
+        }
+    }
+    getCoverageDetails(diffOnly, currentDirectory) {
+        const keys = Object.keys(this.diffCoverageReport);
+        const returnStrings = [];
+        for (const key of keys) {
+            if (this.compareCoverageValues(this.diffCoverageReport[key]) !== 0) {
+                returnStrings.push(this.createDiffLine(key.replace(currentDirectory, ''), this.diffCoverageReport[key]));
+            }
+            else {
+                if (!diffOnly) {
+                    returnStrings.push(`${key.replace(currentDirectory, '')} | ${this.diffCoverageReport[key].statements.newPct} | ${this.diffCoverageReport[key].branches.newPct} | ${this.diffCoverageReport[key].functions.newPct} | ${this.diffCoverageReport[key].lines.newPct}`);
+                }
+            }
+        }
+        return returnStrings;
+    }
+    checkIfTestCoverageFallsBelowDelta(delta) {
+        const keys = Object.keys(this.diffCoverageReport);
+        for (const key of keys) {
+            const diffCoverageData = this.diffCoverageReport[key];
+            const keys = Object.keys(diffCoverageData);
+            for (const key of keys) {
+                if (diffCoverageData[key].oldPct !== diffCoverageData[key].newPct) {
+                    if (-this.getPercentageDiff(diffCoverageData[key]) > delta) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    createDiffLine(name, diffFileCoverageData) {
+        // No old coverage found so that means we added a new file coverage
+        const fileNewCoverage = Object.values(diffFileCoverageData).every(coverageData => coverageData.oldPct === 0);
+        // No new coverage found so that means we deleted a file coverage
+        const fileRemovedCoverage = Object.values(diffFileCoverageData).every(coverageData => coverageData.newPct === 0);
+        if (fileNewCoverage) {
+            return ` ${newCoverageIcon} | **${name}** | **${diffFileCoverageData.statements.newPct}** | **${diffFileCoverageData.branches.newPct}** | **${diffFileCoverageData.functions.newPct}** | **${diffFileCoverageData.lines.newPct}**`;
+        }
+        else if (fileRemovedCoverage) {
+            return ` ${removedCoverageIcon} | ~~${name}~~ | ~~${diffFileCoverageData.statements.oldPct}~~ | ~~${diffFileCoverageData.branches.oldPct}~~ | ~~${diffFileCoverageData.functions.oldPct}~~ | ~~${diffFileCoverageData.lines.oldPct}~~`;
+        }
+        // Coverage existed before so calculate the diff status
+        const statusIcon = this.getStatusIcon(diffFileCoverageData);
+        return ` ${statusIcon} | ${name} | ${diffFileCoverageData.statements.newPct} **(${this.getPercentageDiff(diffFileCoverageData.statements)})** | ${diffFileCoverageData.branches.newPct} **(${this.getPercentageDiff(diffFileCoverageData.branches)})** | ${diffFileCoverageData.functions.newPct} **(${this.getPercentageDiff(diffFileCoverageData.functions)})** | ${diffFileCoverageData.lines.newPct} **(${this.getPercentageDiff(diffFileCoverageData.lines)})**`;
+    }
+    compareCoverageValues(diffCoverageData) {
+        const keys = Object.keys(diffCoverageData);
+        for (const key of keys) {
+            if (diffCoverageData[key].oldPct !== diffCoverageData[key].newPct) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+    getPercentage(coverageData) {
+        return (coverageData === null || coverageData === void 0 ? void 0 : coverageData.pct) || 0;
+    }
+    getStatusIcon(diffFileCoverageData) {
+        let overallDiff = 0;
+        Object.values(diffFileCoverageData).forEach(coverageData => {
+            overallDiff = overallDiff + this.getPercentageDiff(coverageData);
+        });
+        if (overallDiff < 0) {
+            return decreasedCoverageIcon;
+        }
+        return increasedCoverageIcon;
+    }
+    getPercentageDiff(diffData) {
+        // get diff
+        const diff = Number(diffData.newPct) - Number(diffData.oldPct);
+        // round off the diff to 2 decimal places
+        return Math.round((diff + Number.EPSILON) * 100) / 100;
+    }
+}
+exports.DiffChecker = DiffChecker;
 
 
 /***/ }),
