@@ -52,7 +52,7 @@ async function run(): Promise<void> {
     }
 
     const pr = await githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
-    const prBody = pr.data.body;
+    const prBody = pr.data.body || '';
     const hasCoverageResult = prBody.includes(messageTitle);
     const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
     let updateBody = `${prBody}`;
@@ -69,7 +69,7 @@ async function run(): Promise<void> {
       issue_number: prNumber,
       body: updateBody
     })
-  
+
 
     // check if the test coverage is falling below delta/tolerance.
     if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {

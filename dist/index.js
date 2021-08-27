@@ -2060,7 +2060,7 @@ function run() {
                 messageToPost += coverageDetails.join('\n');
             }
             const pr = yield githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
-            const prBody = pr.data.body;
+            const prBody = pr.data.body || '';
             const hasCoverageResult = prBody.includes(messageTitle);
             const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
             let updateBody = `${prBody}`;
