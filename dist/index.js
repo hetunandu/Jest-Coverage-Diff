@@ -2016,6 +2016,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable no-console */
 const core = __importStar(__webpack_require__(470));
 const github = __importStar(__webpack_require__(469));
 const child_process_1 = __webpack_require__(129);
@@ -2035,11 +2036,17 @@ function run() {
             const prNumber = github.context.issue.number;
             const branchNameBase = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base.ref;
             const branchNameHead = (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.head.ref;
+            console.log('Running command once');
             child_process_1.execSync(commandToRun);
+            console.log('reading coverage summary');
             const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
+            console.log('fetch');
             child_process_1.execSync('/usr/bin/git fetch');
+            console.log('stash');
             child_process_1.execSync('/usr/bin/git stash');
+            console.log('checkout base');
             child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
+            console.log('run again');
             child_process_1.execSync(commandToRun);
             const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
             const currentDirectory = child_process_1.execSync('pwd')
