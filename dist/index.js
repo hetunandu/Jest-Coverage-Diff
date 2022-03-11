@@ -2045,7 +2045,7 @@ function run() {
             console.log('stash');
             child_process_1.execSync('/usr/bin/git stash');
             console.log('checkout base');
-            // execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
+            child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
             console.log('run again');
             // execSync(commandToRun)
             const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
