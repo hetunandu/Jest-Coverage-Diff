@@ -2045,9 +2045,9 @@ function run() {
             console.log('stash');
             child_process_1.execSync('/usr/bin/git stash');
             console.log('checkout base');
-            child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
+            // execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
             console.log('run again');
-            child_process_1.execSync(commandToRun);
+            // execSync(commandToRun)
             const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
             const currentDirectory = child_process_1.execSync('pwd')
                 .toString()
