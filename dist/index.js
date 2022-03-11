@@ -2047,7 +2047,7 @@ function run() {
             console.log('checkout base');
             child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
             console.log('run again');
-            // execSync(commandToRun)
+            child_process_1.execSync(commandToRun);
             const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
             const currentDirectory = child_process_1.execSync('pwd')
                 .toString()
