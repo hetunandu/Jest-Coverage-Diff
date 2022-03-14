@@ -28,7 +28,13 @@ async function run(): Promise<void> {
     execSync('/usr/bin/git stash')
 
     execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
-    execSync(commandToRun)
+    try {
+      execSync(commandToRun)
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log('Error for running', e)
+    }
+
     const codeCoverageOld = <CoverageReport>(
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
     )

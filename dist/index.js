@@ -2042,7 +2042,13 @@ function run() {
             child_process_1.execSync('/usr/bin/git fetch');
             child_process_1.execSync('/usr/bin/git stash');
             child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
-            child_process_1.execSync(commandToRun);
+            try {
+                child_process_1.execSync(commandToRun);
+            }
+            catch (e) {
+                // eslint-disable-next-line no-console
+                console.log('Error for running', e);
+            }
             const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
             const currentDirectory = child_process_1.execSync('pwd')
                 .toString()
