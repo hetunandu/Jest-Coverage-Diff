@@ -2037,16 +2037,10 @@ function run() {
             const branchNameHead = (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.head.ref;
             child_process_1.execSync(commandToRun);
             const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
-            try {
-                child_process_1.execSync('/usr/bin/git fetch');
-                child_process_1.execSync('/usr/bin/git stash');
-                child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
-                child_process_1.execSync(commandToRun);
-            }
-            catch (e) {
-                // eslint-disable-next-line no-console
-                console.log('Error for running', e);
-            }
+            child_process_1.execSync('/usr/bin/git fetch');
+            child_process_1.execSync('/usr/bin/git stash');
+            child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
+            child_process_1.execSync(commandToRun);
             const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
             const currentDirectory = child_process_1.execSync('pwd')
                 .toString()

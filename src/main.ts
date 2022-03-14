@@ -23,16 +23,11 @@ async function run(): Promise<void> {
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
     )
 
-    try {
-      execSync('/usr/bin/git fetch')
-      execSync('/usr/bin/git stash')
+    execSync('/usr/bin/git fetch')
+    execSync('/usr/bin/git stash')
 
-      execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
-      execSync(commandToRun)
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.log('Error for running', e)
-    }
+    execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
+    execSync(commandToRun)
 
     const codeCoverageOld = <CoverageReport>(
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
