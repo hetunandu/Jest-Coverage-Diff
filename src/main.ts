@@ -17,6 +17,7 @@ async function run(): Promise<void> {
     const prNumber = github.context.issue.number
     const branchNameBase = github.context.payload.pull_request?.base.ref
     const branchNameHead = github.context.payload.pull_request?.head.ref
+    const username = github.context.payload.pull_request?.user.login
 
     execSync(commandToRun)
     const codeCoverageNew = <CoverageReport>(
@@ -54,6 +55,20 @@ async function run(): Promise<void> {
         'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n'
       messageToPost += coverageDetails.join('\n')
     }
+
+    // eslint-disable-next-line no-console
+    console.log({username})
+
+    const permissions = await githubClient.repos.getCollaboratorPermissionLevel(
+      {
+        owner: repoOwner,
+        repo: repoName,
+        username
+      }
+    )
+
+    // eslint-disable-next-line no-console
+    console.log({permissions})
 
     const pr = await githubClient.issues.get({
       repo: repoName,

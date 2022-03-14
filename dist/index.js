@@ -2022,7 +2022,7 @@ const child_process_1 = __webpack_require__(129);
 const fs_1 = __importDefault(__webpack_require__(747));
 const DiffChecker_1 = __webpack_require__(563);
 function run() {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const repoName = github.context.repo.repo;
@@ -2035,6 +2035,7 @@ function run() {
             const prNumber = github.context.issue.number;
             const branchNameBase = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base.ref;
             const branchNameHead = (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.head.ref;
+            const username = (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.user.login;
             child_process_1.execSync(commandToRun);
             const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
             child_process_1.execSync('/usr/bin/git fetch');
@@ -2059,6 +2060,15 @@ function run() {
                     'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n';
                 messageToPost += coverageDetails.join('\n');
             }
+            // eslint-disable-next-line no-console
+            console.log({ username });
+            const permissions = yield githubClient.repos.getCollaboratorPermissionLevel({
+                owner: repoOwner,
+                repo: repoName,
+                username
+            });
+            // eslint-disable-next-line no-console
+            console.log({ permissions });
             const pr = yield githubClient.issues.get({
                 repo: repoName,
                 owner: repoOwner,
