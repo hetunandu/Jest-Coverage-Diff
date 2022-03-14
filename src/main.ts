@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {execSync} from 'child_process'
@@ -18,23 +17,17 @@ async function run(): Promise<void> {
     const prNumber = github.context.issue.number
     const branchNameBase = github.context.payload.pull_request?.base.ref
     const branchNameHead = github.context.payload.pull_request?.head.ref
-    console.log('Running command once')
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(github.context.payload.pull_request))
     execSync(commandToRun)
-    console.log('reading coverage summary')
     const codeCoverageNew = <CoverageReport>(
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
     )
 
-    console.log('fetch')
-
     execSync('/usr/bin/git fetch')
-
-    console.log('stash')
     execSync('/usr/bin/git stash')
 
-    console.log('checkout base')
     execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
-    console.log('run again')
     execSync(commandToRun)
     const codeCoverageOld = <CoverageReport>(
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
