@@ -2039,10 +2039,10 @@ function run() {
             console.log(JSON.stringify(github.context.payload.pull_request));
             child_process_1.execSync(commandToRun);
             const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
-            child_process_1.execSync('/usr/bin/git fetch');
-            child_process_1.execSync('/usr/bin/git stash');
-            child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
             try {
+                child_process_1.execSync('/usr/bin/git fetch');
+                child_process_1.execSync('/usr/bin/git stash');
+                child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
                 child_process_1.execSync(commandToRun);
             }
             catch (e) {
@@ -2067,7 +2067,11 @@ function run() {
                     'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n';
                 messageToPost += coverageDetails.join('\n');
             }
-            const pr = yield githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
+            const pr = yield githubClient.issues.get({
+                repo: repoName,
+                owner: repoOwner,
+                issue_number: prNumber
+            });
             const prBody = pr.data.body || '';
             const hasCoverageResult = prBody.includes(messageTitle);
             const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;

@@ -24,11 +24,11 @@ async function run(): Promise<void> {
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
     )
 
-    execSync('/usr/bin/git fetch')
-    execSync('/usr/bin/git stash')
-
-    execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
     try {
+      execSync('/usr/bin/git fetch')
+      execSync('/usr/bin/git stash')
+
+      execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`)
       execSync(commandToRun)
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -61,17 +61,21 @@ async function run(): Promise<void> {
       messageToPost += coverageDetails.join('\n')
     }
 
-    const pr = await githubClient.issues.get({ repo: repoName, owner: repoOwner, issue_number: prNumber });
-    const prBody = pr.data.body || '';
-    const hasCoverageResult = prBody.includes(messageTitle);
-    const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
-    let updateBody = `${prBody}`;
-    if(hasCoverageResult) {
-      const coverageStarts = prBody.indexOf(messageTitle);
-      const bodyWithoutCoverage = prBody.substring(0, coverageStarts);
-      updateBody = `${bodyWithoutCoverage}\n${coverageBody}`;
+    const pr = await githubClient.issues.get({
+      repo: repoName,
+      owner: repoOwner,
+      issue_number: prNumber
+    })
+    const prBody = pr.data.body || ''
+    const hasCoverageResult = prBody.includes(messageTitle)
+    const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`
+    let updateBody = `${prBody}`
+    if (hasCoverageResult) {
+      const coverageStarts = prBody.indexOf(messageTitle)
+      const bodyWithoutCoverage = prBody.substring(0, coverageStarts)
+      updateBody = `${bodyWithoutCoverage}\n${coverageBody}`
     } else {
-      updateBody = `${prBody}\n${coverageBody}`;
+      updateBody = `${prBody}\n${coverageBody}`
     }
     await githubClient.issues.update({
       repo: repoName,
@@ -79,7 +83,6 @@ async function run(): Promise<void> {
       issue_number: prNumber,
       body: updateBody
     })
-
 
     // check if the test coverage is falling below delta/tolerance.
     if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
