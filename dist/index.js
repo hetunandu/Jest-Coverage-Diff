@@ -2037,71 +2037,69 @@ function run() {
             const branchNameHead = (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.head.ref;
             const username = (_c = github.context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.user.login;
             child_process_1.execSync(commandToRun);
-            const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
-            child_process_1.execSync('/usr/bin/git fetch');
-            child_process_1.execSync('/usr/bin/git stash');
-            child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
-            child_process_1.execSync(commandToRun);
-            const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
-            const currentDirectory = child_process_1.execSync('pwd')
-                .toString()
-                .trim();
-            const diffChecker = new DiffChecker_1.DiffChecker(codeCoverageNew, codeCoverageOld);
-            const messageTitle = `## Test coverage results :test_tube:`;
-            let messageToPost = `\n
-    // Code coverage diff between base branch:${branchNameBase} and head branch: ${branchNameHead} \n`;
-            const coverageDetails = diffChecker.getCoverageDetails(!fullCoverage, `${currentDirectory}/`);
-            if (coverageDetails.length === 0) {
-                messageToPost =
-                    'No changes to code coverage between the base branch and the head branch';
-            }
-            else {
-                messageToPost +=
-                    'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n';
-                messageToPost += coverageDetails.join('\n');
-            }
-            // eslint-disable-next-line no-console
-            console.log({ username });
-            const permissions = yield githubClient.repos.getCollaboratorPermissionLevel({
+            const permissionsRequest = yield githubClient.repos.getCollaboratorPermissionLevel({
                 owner: repoOwner,
                 repo: repoName,
                 username
             });
-            // eslint-disable-next-line no-console
-            console.log({ permissions });
-            const pr = yield githubClient.issues.get({
-                repo: repoName,
-                owner: repoOwner,
-                issue_number: prNumber
-            });
-            const prBody = pr.data.body || '';
-            const hasCoverageResult = prBody.includes(messageTitle);
-            const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
-            let updateBody = `${prBody}`;
-            if (hasCoverageResult) {
-                const coverageStarts = prBody.indexOf(messageTitle);
-                const bodyWithoutCoverage = prBody.substring(0, coverageStarts);
-                updateBody = `${bodyWithoutCoverage}\n${coverageBody}`;
-            }
-            else {
-                updateBody = `${prBody}\n${coverageBody}`;
-            }
-            yield githubClient.issues.update({
-                repo: repoName,
-                owner: repoOwner,
-                issue_number: prNumber,
-                body: updateBody
-            });
-            // check if the test coverage is falling below delta/tolerance.
-            if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
-                messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`;
-                yield githubClient.issues.createComment({
+            if (permissionsRequest.data.permission !== 'none') {
+                const codeCoverageNew = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
+                child_process_1.execSync('/usr/bin/git fetch');
+                child_process_1.execSync('/usr/bin/git stash');
+                child_process_1.execSync(`/usr/bin/git checkout --progress --force ${branchNameBase}`);
+                child_process_1.execSync(commandToRun);
+                const codeCoverageOld = (JSON.parse(fs_1.default.readFileSync('coverage-summary.json').toString()));
+                const currentDirectory = child_process_1.execSync('pwd')
+                    .toString()
+                    .trim();
+                const diffChecker = new DiffChecker_1.DiffChecker(codeCoverageNew, codeCoverageOld);
+                const messageTitle = `## Test coverage results :test_tube:`;
+                let messageToPost = `\n
+    // Code coverage diff between base branch:${branchNameBase} and head branch: ${branchNameHead} \n`;
+                const coverageDetails = diffChecker.getCoverageDetails(!fullCoverage, `${currentDirectory}/`);
+                if (coverageDetails.length === 0) {
+                    messageToPost =
+                        'No changes to code coverage between the base branch and the head branch';
+                }
+                else {
+                    messageToPost +=
+                        'Status | File | % Stmts | % Branch | % Funcs | % Lines \n -----|-----|---------|----------|---------|------ \n';
+                    messageToPost += coverageDetails.join('\n');
+                }
+                const pr = yield githubClient.issues.get({
                     repo: repoName,
                     owner: repoOwner,
-                    body: messageToPost,
                     issue_number: prNumber
                 });
-                throw Error(messageToPost);
+                const prBody = pr.data.body || '';
+                const hasCoverageResult = prBody.includes(messageTitle);
+                const coverageBody = `${messageTitle}\n<details><summary>${diffChecker.getCoverageSummary()}</summary>\n${messageToPost}</details>`;
+                let updateBody = `${prBody}`;
+                if (hasCoverageResult) {
+                    const coverageStarts = prBody.indexOf(messageTitle);
+                    const bodyWithoutCoverage = prBody.substring(0, coverageStarts);
+                    updateBody = `${bodyWithoutCoverage}\n${coverageBody}`;
+                }
+                else {
+                    updateBody = `${prBody}\n${coverageBody}`;
+                }
+                yield githubClient.issues.update({
+                    repo: repoName,
+                    owner: repoOwner,
+                    issue_number: prNumber,
+                    body: updateBody
+                });
+                // check if the test coverage is falling below delta/tolerance.
+                if (diffChecker.checkIfTestCoverageFallsBelowDelta(delta)) {
+                    messageToPost = `Current PR reduces the test coverage percentage by ${delta} for some tests`;
+                    yield githubClient.issues.createComment({
+                        repo: repoName,
+                        owner: repoOwner,
+                        body: messageToPost,
+                        issue_number: prNumber
+                    });
+                    throw Error(messageToPost);
+                }
             }
         }
         catch (error) {
