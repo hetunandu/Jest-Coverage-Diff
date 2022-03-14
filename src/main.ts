@@ -17,8 +17,7 @@ async function run(): Promise<void> {
     const prNumber = github.context.issue.number
     const branchNameBase = github.context.payload.pull_request?.base.ref
     const branchNameHead = github.context.payload.pull_request?.head.ref
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(github.context.payload.pull_request))
+
     execSync(commandToRun)
     const codeCoverageNew = <CoverageReport>(
       JSON.parse(fs.readFileSync('coverage-summary.json').toString())
